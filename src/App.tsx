@@ -12,6 +12,8 @@ import Tasks from "./pages/Tasks";
 import Focus from "./pages/Focus";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import ExpenseTracker from "./pages/ExpenseTracker";
+import AdvancedAnalysis from "./pages/AdvancedAnalysis";
 
 const queryClient = new QueryClient();
 

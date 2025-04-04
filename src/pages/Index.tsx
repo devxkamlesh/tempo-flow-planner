@@ -8,6 +8,8 @@ import Tasks from "./Tasks";
 import Focus from "./Focus";
 import Settings from "./Settings";
 import Profile from "./Profile";
+import ExpenseTracker from "./ExpenseTracker";
+import AdvancedAnalysis from "./AdvancedAnalysis";
 
 const Index = () => {
   return (
@@ -20,6 +22,8 @@ const Index = () => {
           <Route path="/focus" element={<Focus />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/expense-tracker" element={<ExpenseTracker />} />
+          <Route path="/analysis" element={<AdvancedAnalysis />} />
         </Routes>
       </Layout>
     </CalendarProvider>

@@ -7,6 +7,8 @@ import {
   Settings,
   User,
   Menu,
+  Wallet,
+  ChartBar,
 } from "lucide-react";
 import {
   Sidebar as SidebarComponent,
@@ -44,6 +46,16 @@ const menuItems = [
     title: "Focus Time",
     path: "/focus",
     icon: Clock,
+  },
+  {
+    title: "Expense Tracker",
+    path: "/expense-tracker",
+    icon: Wallet,
+  },
+  {
+    title: "Analysis",
+    path: "/analysis",
+    icon: ChartBar,
   },
 ];
 
