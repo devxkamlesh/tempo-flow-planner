@@ -98,8 +98,8 @@ const initialExpenses: Expense[] = [
 
 const ExpenseTracker: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: '',
     end: ''
@@ -162,10 +162,10 @@ const ExpenseTracker: React.FC = () => {
     let matchesType = true;
     let matchesDate = true;
 
-    if (filterCategory) {
+    if (filterCategory && filterCategory !== 'all') {
       matchesCategory = expense.category === filterCategory;
     }
-    if (filterType) {
+    if (filterType && filterType !== 'all') {
       matchesType = expense.type === filterType;
     }
     if (dateRange.start) {
@@ -243,7 +243,7 @@ const ExpenseTracker: React.FC = () => {
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="income">Income</SelectItem>
                       <SelectItem value="expense">Expense</SelectItem>
                     </SelectContent>
@@ -254,7 +254,7 @@ const ExpenseTracker: React.FC = () => {
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {CATEGORIES.map(category => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
@@ -309,7 +309,7 @@ const ExpenseTracker: React.FC = () => {
                     <Wallet className="h-12 w-12 text-gray-300 mx-auto mb-2" />
                     <p className="text-gray-500 font-medium">No transactions found</p>
                     <p className="text-sm text-gray-400">
-                      {filterCategory || filterType 
+                      {filterCategory || filterType !== 'all'
                         ? 'Try changing your filters' 
                         : 'Add some transactions to get started!'}
                     </p>
