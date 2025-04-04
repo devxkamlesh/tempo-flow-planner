@@ -24,8 +24,8 @@ import { Button } from '@/components/ui/button';
 import {
   ChartBar,
   TrendingUp,
-  LineChart,
-  PieChart,
+  LineChart as LineChartIcon,
+  PieChart as PieChartIcon,
   Calendar as CalendarIcon,
   Clock,
   ListTodo,
@@ -48,10 +48,12 @@ import {
   ResponsiveContainer, 
   BarChart, 
   Bar,
-  PieChart as RechartsPieChart,
+  PieChart,
   Pie,
   Cell,
-  Legend 
+  Legend,
+  LineChart,
+  Line
 } from 'recharts';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 
@@ -393,7 +395,7 @@ const AdvancedAnalysis: React.FC = () => {
               <CardContent className="pt-0">
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
+                    <PieChart>
                       <Pie
                         data={categoryData}
                         cx="50%"
@@ -411,7 +413,7 @@ const AdvancedAnalysis: React.FC = () => {
                       </Pie>
                       <Tooltip formatter={(value) => [`${value} hours`, 'Time Spent']} />
                       <Legend />
-                    </RechartsPieChart>
+                    </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
@@ -519,7 +521,7 @@ const AdvancedAnalysis: React.FC = () => {
               <CardContent className="pt-0">
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
+                    <PieChart>
                       <Pie
                         data={expenseData}
                         cx="50%"
@@ -536,7 +538,7 @@ const AdvancedAnalysis: React.FC = () => {
                       </Pie>
                       <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
                       <Legend />
-                    </RechartsPieChart>
+                    </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
