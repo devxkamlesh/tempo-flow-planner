@@ -14,8 +14,10 @@ const Layout = ({ children }: LayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <Sidebar />
-        <main className={`flex-1 ${isMobile ? 'p-4' : 'p-6'} overflow-auto`}>
-          {children}
+        <main className={`flex-1 ${isMobile ? 'p-4' : 'p-6 px-8'} overflow-auto bg-background`}>
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -11,18 +11,87 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Clock, Calendar, Bell, Palette, User, Languages } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast } from "sonner";
+import { 
+  Clock, 
+  Calendar as CalendarIcon, 
+  Bell, 
+  Palette, 
+  User, 
+  Languages, 
+  Save, 
+  RefreshCw, 
+  ChevronDown
+} from 'lucide-react';
 
 const Settings: React.FC = () => {
+  // State for all settings
+  const [calendarSettings, setCalendarSettings] = useState({
+    startWeekMonday: false,
+    showPastEvents: true,
+    showWorkingHours: true
+  });
+  
+  const [focusSettings, setFocusSettings] = useState({
+    focusDuration: "25",
+    shortBreak: "5",
+    longBreak: "15",
+    autoBreak: false,
+    autoFocus: false
+  });
+  
+  const [notificationSettings, setNotificationSettings] = useState({
+    eventReminders: true,
+    focusAlerts: true,
+    taskReminders: true
+  });
+  
+  const [appearanceSettings, setAppearanceSettings] = useState({
+    colorTheme: "purple",
+    viewDensity: "default",
+    timeFormat: "12"
+  });
+  
+  // Handle save all settings
+  const saveAllSettings = () => {
+    // In a real application, this would send data to an API
+    toast.success("Settings saved successfully!");
+    console.log({
+      calendarSettings,
+      focusSettings,
+      notificationSettings,
+      appearanceSettings
+    });
+  };
+
   return (
-    <div className="settings-page">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+    <div className="settings-page pb-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <Button onClick={saveAllSettings} className="ml-auto">
+          <Save className="mr-2 h-4 w-4" />
+          Save All Changes
+        </Button>
+      </div>
       
       <div className="space-y-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-calendar" />
+              <CalendarIcon className="h-5 w-5 text-calendar" />
               Calendar Settings
             </CardTitle>
             <CardDescription>
@@ -37,7 +106,11 @@ const Settings: React.FC = () => {
                   Display Monday as the first day of the week
                 </div>
               </div>
-              <Switch id="calendar-weeks" />
+              <Switch 
+                id="calendar-weeks" 
+                checked={calendarSettings.startWeekMonday}
+                onCheckedChange={(checked) => setCalendarSettings({...calendarSettings, startWeekMonday: checked})}
+              />
             </div>
             
             <Separator />
@@ -49,7 +122,11 @@ const Settings: React.FC = () => {
                   Display events that have already occurred
                 </div>
               </div>
-              <Switch id="calendar-past" defaultChecked />
+              <Switch 
+                id="calendar-past" 
+                checked={calendarSettings.showPastEvents}
+                onCheckedChange={(checked) => setCalendarSettings({...calendarSettings, showPastEvents: checked})}
+              />
             </div>
             
             <Separator />
@@ -61,13 +138,17 @@ const Settings: React.FC = () => {
                   Highlight your working hours in the calendar
                 </div>
               </div>
-              <Switch id="working-hours" defaultChecked />
+              <Switch 
+                id="working-hours" 
+                checked={calendarSettings.showWorkingHours}
+                onCheckedChange={(checked) => setCalendarSettings({...calendarSettings, showWorkingHours: checked})}
+              />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-calendar" />
               Focus Time Settings
@@ -80,32 +161,65 @@ const Settings: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="focus-duration">Focus duration</Label>
-                <select id="focus-duration" className="w-full p-2 rounded-md border border-input">
-                  <option value="20">20 minutes</option>
-                  <option value="25" selected>25 minutes</option>
-                  <option value="30">30 minutes</option>
-                  <option value="45">45 minutes</option>
-                  <option value="60">60 minutes</option>
-                </select>
+                <Select 
+                  value={focusSettings.focusDuration}
+                  onValueChange={(value) => setFocusSettings({...focusSettings, focusDuration: value})}
+                >
+                  <SelectTrigger id="focus-duration">
+                    <SelectValue placeholder="Select minutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Minutes</SelectLabel>
+                      <SelectItem value="20">20 minutes</SelectItem>
+                      <SelectItem value="25">25 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">60 minutes</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="short-break">Short break</Label>
-                <select id="short-break" className="w-full p-2 rounded-md border border-input">
-                  <option value="3">3 minutes</option>
-                  <option value="5" selected>5 minutes</option>
-                  <option value="10">10 minutes</option>
-                </select>
+                <Select 
+                  value={focusSettings.shortBreak}
+                  onValueChange={(value) => setFocusSettings({...focusSettings, shortBreak: value})}
+                >
+                  <SelectTrigger id="short-break">
+                    <SelectValue placeholder="Select minutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Minutes</SelectLabel>
+                      <SelectItem value="3">3 minutes</SelectItem>
+                      <SelectItem value="5">5 minutes</SelectItem>
+                      <SelectItem value="10">10 minutes</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="long-break">Long break</Label>
-                <select id="long-break" className="w-full p-2 rounded-md border border-input">
-                  <option value="10">10 minutes</option>
-                  <option value="15" selected>15 minutes</option>
-                  <option value="20">20 minutes</option>
-                  <option value="30">30 minutes</option>
-                </select>
+                <Select 
+                  value={focusSettings.longBreak}
+                  onValueChange={(value) => setFocusSettings({...focusSettings, longBreak: value})}
+                >
+                  <SelectTrigger id="long-break">
+                    <SelectValue placeholder="Select minutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Minutes</SelectLabel>
+                      <SelectItem value="10">10 minutes</SelectItem>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="20">20 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
@@ -118,7 +232,11 @@ const Settings: React.FC = () => {
                   Automatically start breaks after focus sessions
                 </div>
               </div>
-              <Switch id="auto-break" />
+              <Switch 
+                id="auto-break" 
+                checked={focusSettings.autoBreak}
+                onCheckedChange={(checked) => setFocusSettings({...focusSettings, autoBreak: checked})}
+              />
             </div>
             
             <Separator />
@@ -130,13 +248,17 @@ const Settings: React.FC = () => {
                   Automatically start focus sessions after breaks
                 </div>
               </div>
-              <Switch id="auto-focus" />
+              <Switch 
+                id="auto-focus" 
+                checked={focusSettings.autoFocus}
+                onCheckedChange={(checked) => setFocusSettings({...focusSettings, autoFocus: checked})}
+              />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-calendar" />
               Notifications
@@ -153,7 +275,11 @@ const Settings: React.FC = () => {
                   Receive notifications before events start
                 </div>
               </div>
-              <Switch id="event-notifications" defaultChecked />
+              <Switch 
+                id="event-notifications" 
+                checked={notificationSettings.eventReminders}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, eventReminders: checked})}
+              />
             </div>
             
             <Separator />
@@ -165,7 +291,11 @@ const Settings: React.FC = () => {
                   Receive notifications when focus sessions start and end
                 </div>
               </div>
-              <Switch id="focus-notifications" defaultChecked />
+              <Switch 
+                id="focus-notifications" 
+                checked={notificationSettings.focusAlerts}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, focusAlerts: checked})}
+              />
             </div>
             
             <Separator />
@@ -177,13 +307,17 @@ const Settings: React.FC = () => {
                   Receive notifications for upcoming task deadlines
                 </div>
               </div>
-              <Switch id="task-notifications" defaultChecked />
+              <Switch 
+                id="task-notifications" 
+                checked={notificationSettings.taskReminders}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, taskReminders: checked})}
+              />
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5 text-calendar" />
               Appearance
@@ -193,38 +327,97 @@ const Settings: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label>Color Theme</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="w-full aspect-square bg-calendar rounded-md cursor-pointer ring-2 ring-calendar ring-offset-2" />
-                  <div className="w-full aspect-square bg-blue-500 rounded-md cursor-pointer" />
-                  <div className="w-full aspect-square bg-green-500 rounded-md cursor-pointer" />
-                  <div className="w-full aspect-square bg-orange-500 rounded-md cursor-pointer" />
-                  <div className="w-full aspect-square bg-red-500 rounded-md cursor-pointer" />
-                  <div className="w-full aspect-square bg-gray-500 rounded-md cursor-pointer" />
+            <div className="grid grid-cols-1 gap-6">
+              <Collapsible className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold">Color Theme</h4>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-9 p-0">
+                      <ChevronDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle</span>
+                    </Button>
+                  </CollapsibleTrigger>
                 </div>
-              </div>
+                <CollapsibleContent>
+                  <RadioGroup 
+                    className="grid grid-cols-2 gap-2" 
+                    defaultValue={appearanceSettings.colorTheme}
+                    onValueChange={(value) => setAppearanceSettings({...appearanceSettings, colorTheme: value})}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="purple" id="theme-purple" />
+                      <Label htmlFor="theme-purple" className="flex items-center">
+                        <div className="w-4 h-4 rounded-full bg-calendar mr-2"></div>
+                        Purple
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="blue" id="theme-blue" />
+                      <Label htmlFor="theme-blue" className="flex items-center">
+                        <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
+                        Blue
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="green" id="theme-green" />
+                      <Label htmlFor="theme-green" className="flex items-center">
+                        <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
+                        Green
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="orange" id="theme-orange" />
+                      <Label htmlFor="theme-orange" className="flex items-center">
+                        <div className="w-4 h-4 rounded-full bg-orange-500 mr-2"></div>
+                        Orange
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </CollapsibleContent>
+              </Collapsible>
               
               <div className="space-y-2">
                 <Label htmlFor="view-density">View Density</Label>
-                <select id="view-density" className="w-full p-2 rounded-md border border-input">
-                  <option value="compact">Compact</option>
-                  <option value="default" selected>Default</option>
-                  <option value="relaxed">Relaxed</option>
-                </select>
+                <ToggleGroup type="single" id="view-density" 
+                  value={appearanceSettings.viewDensity}
+                  onValueChange={(value) => {
+                    if (value) setAppearanceSettings({...appearanceSettings, viewDensity: value})
+                  }}
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="compact" aria-label="Compact">Compact</ToggleGroupItem>
+                  <ToggleGroupItem value="default" aria-label="Default">Default</ToggleGroupItem>
+                  <ToggleGroupItem value="relaxed" aria-label="Relaxed">Relaxed</ToggleGroupItem>
+                </ToggleGroup>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="time-format">Time Format</Label>
-                <select id="time-format" className="w-full p-2 rounded-md border border-input">
-                  <option value="12" selected>12-hour (AM/PM)</option>
-                  <option value="24">24-hour</option>
-                </select>
+                <ToggleGroup type="single" id="time-format" 
+                  value={appearanceSettings.timeFormat}
+                  onValueChange={(value) => {
+                    if (value) setAppearanceSettings({...appearanceSettings, timeFormat: value})
+                  }}
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="12" aria-label="12-hour">12-hour (AM/PM)</ToggleGroupItem>
+                  <ToggleGroupItem value="24" aria-label="24-hour">24-hour</ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
           </CardContent>
         </Card>
+        
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reset to Default
+          </Button>
+          <Button onClick={saveAllSettings}>
+            <Save className="mr-2 h-4 w-4" />
+            Save All Changes
+          </Button>
+        </div>
       </div>
     </div>
   );
