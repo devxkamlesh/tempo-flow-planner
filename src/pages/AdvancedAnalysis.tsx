@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Card,
@@ -263,7 +264,7 @@ const AdvancedAnalysis: React.FC = () => {
             trendValue="-5%"
           />
           <InsightCard 
-            icon={ChartBar} 
+            icon={BarChartIcon} 
             title="Productivity Score"
             value="8.5/10"
             description="based on your activity"
@@ -292,14 +293,14 @@ const AdvancedAnalysis: React.FC = () => {
             trendValue="+3%"
           />
           <InsightCard 
-            icon={ChartBar} 
+            icon={BarChartIcon} 
             title="Biggest Category"
             value="Housing"
             description="of monthly expenses"
             trend="neutral"
           />
           <InsightCard 
-            icon={LineChart} 
+            icon={LineChartIcon} 
             title="Expense Trend"
             value="Decreasing"
             description="over last 3 months"

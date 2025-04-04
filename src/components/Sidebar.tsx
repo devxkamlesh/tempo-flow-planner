@@ -8,7 +8,7 @@ import {
   User,
   Menu,
   Wallet,
-  ChartBar,
+  BarChart,
 } from "lucide-react";
 import {
   Sidebar as SidebarComponent,
@@ -55,7 +55,7 @@ const menuItems = [
   {
     title: "Analysis",
     path: "/analysis",
-    icon: ChartBar,
+    icon: BarChart,
   },
 ];
 
