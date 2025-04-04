@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Card,
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
 import {
-  ChartBar,
+  BarChart as BarChartIcon,
   TrendingUp,
   LineChart as LineChartIcon,
   PieChart as PieChartIcon,
@@ -30,6 +29,10 @@ import {
   Clock,
   ListTodo,
   Wallet,
+  CheckSquare,
+  AlertCircle,
+  Clock3,
+  Tag
 } from 'lucide-react';
 import {
   ChartContainer,
@@ -57,7 +60,6 @@ import {
 } from 'recharts';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 
-// Sample data for analytics
 const timeData = [
   { date: '2025-03-01', focus: 3.5, meetings: 2, tasks: 8 },
   { date: '2025-03-02', focus: 2.5, meetings: 3, tasks: 6 },
@@ -144,7 +146,45 @@ const taskCompletionByDay = [
   { day: 'Sunday', completed: 3, pending: 1 },
 ];
 
-// Custom component to display insights
+const tasksByPriority = [
+  { priority: 'High', count: 5, color: '#ef4444' },
+  { priority: 'Medium', count: 12, color: '#f59e0b' },
+  { priority: 'Low', count: 8, color: '#3b82f6' },
+];
+
+const tasksByStatus = [
+  { status: 'Completed', count: 18, color: '#22c55e' },
+  { status: 'In Progress', count: 7, color: '#9b87f5' },
+];
+
+const taskCompletionTrend = [
+  { date: '2025-03-28', completed: 3, added: 4 },
+  { date: '2025-03-29', completed: 5, added: 2 },
+  { date: '2025-03-30', completed: 2, added: 3 },
+  { date: '2025-03-31', completed: 4, added: 1 },
+  { date: '2025-04-01', completed: 6, added: 3 },
+  { date: '2025-04-02', completed: 3, added: 5 },
+  { date: '2025-04-03', completed: 4, added: 2 },
+  { date: '2025-04-04', completed: 5, added: 3 },
+];
+
+const taskCategories = [
+  { category: 'Work', count: 12, color: '#9b87f5' },
+  { category: 'Personal', count: 8, color: '#f97316' },
+  { category: 'Health', count: 5, color: '#22c55e' },
+  { category: 'Learning', count: 7, color: '#3b82f6' },
+  { category: 'Home', count: 4, color: '#ec4899' },
+];
+
+const dueDateAnalysis = [
+  { status: 'Overdue', count: 3, color: '#ef4444' },
+  { status: 'Due Today', count: 2, color: '#f59e0b' },
+  { status: 'Due This Week', count: 8, color: '#9b87f5' },
+  { status: 'Due Next Week', count: 5, color: '#3b82f6' },
+  { status: 'Later', count: 7, color: '#22c55e' },
+  { status: 'No Due Date', count: 4, color: '#94a3b8' },
+];
+
 const InsightCard = ({ icon: Icon, title, value, description, trend, trendValue }: {
   icon: React.ElementType;
   title: string;
@@ -188,7 +228,6 @@ const AdvancedAnalysis: React.FC = () => {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('week');
   const [analysisType, setAnalysisType] = useState<string>('productivity');
   
-  // Filter data based on time range
   const filteredTimeData = timeRange === 'week' 
     ? timeData.slice(-7) 
     : timeRange === 'month' 
@@ -196,7 +235,6 @@ const AdvancedAnalysis: React.FC = () => {
       : timeData;
 
   const renderInsightCards = () => {
-    // Different insights based on tab selection
     if (analysisType === 'productivity') {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -270,6 +308,42 @@ const AdvancedAnalysis: React.FC = () => {
           />
         </div>
       );
+    } else if (analysisType === 'tasks') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <InsightCard 
+            icon={CheckSquare} 
+            title="Task Completion"
+            value="75%"
+            description="completion rate"
+            trend="up"
+            trendValue="+12%"
+          />
+          <InsightCard 
+            icon={AlertCircle} 
+            title="High Priority"
+            value="5 tasks"
+            description="require attention"
+            trend="down"
+            trendValue="-2"
+          />
+          <InsightCard 
+            icon={Clock3} 
+            title="Overdue"
+            value="3 tasks"
+            description="past due date"
+            trend="down"
+            trendValue="-1"
+          />
+          <InsightCard 
+            icon={Tag} 
+            title="Most Common"
+            value="Work"
+            description="task category"
+            trend="neutral"
+          />
+        </div>
+      );
     }
   };
 
@@ -280,12 +354,16 @@ const AdvancedAnalysis: React.FC = () => {
       <Tabs defaultValue="productivity" onValueChange={setAnalysisType}>
         <TabsList className="mb-6">
           <TabsTrigger value="productivity" className="flex items-center">
-            <ChartBar className="h-4 w-4 mr-2" />
+            <BarChartIcon className="h-4 w-4 mr-2" />
             Productivity
           </TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center">
             <Wallet className="h-4 w-4 mr-2" />
             Financial
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center">
+            <ListTodo className="h-4 w-4 mr-2" />
+            Tasks
           </TabsTrigger>
         </TabsList>
         
@@ -605,6 +683,217 @@ const AdvancedAnalysis: React.FC = () => {
                         fill="#8884d8"
                       >
                         {expenseData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="tasks">
+          {renderInsightCards()}
+          
+          <div className="flex justify-end mb-4">
+            <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Past Week</SelectItem>
+                <SelectItem value="month">Past Month</SelectItem>
+                <SelectItem value="quarter">Past Quarter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Task Completion Trend</CardTitle>
+                <CardDescription>Tasks completed vs added over time</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={taskCompletionTrend}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 30 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0.2} />
+                        </linearGradient>
+                        <linearGradient id="colorAdded" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#9b87f5" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#9b87f5" stopOpacity={0.2} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(date) => format(parseISO(date), 'MMM d')}
+                        angle={-45}
+                        textAnchor="end"
+                        height={50}
+                      />
+                      <YAxis 
+                        label={{ value: 'Tasks', angle: -90, position: 'insideLeft' }}
+                      />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <Tooltip
+                        labelFormatter={(date) => format(parseISO(date), 'MMM d, yyyy')}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="completed" 
+                        name="Completed Tasks"
+                        stroke="#22c55e" 
+                        fillOpacity={1} 
+                        fill="url(#colorCompleted)" 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="added" 
+                        name="Added Tasks"
+                        stroke="#9b87f5" 
+                        fillOpacity={1} 
+                        fill="url(#colorAdded)" 
+                      />
+                      <Legend />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Tasks by Priority</CardTitle>
+                <CardDescription>Distribution by priority level</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={tasksByPriority}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        fill="#8884d8"
+                        paddingAngle={5}
+                        dataKey="count"
+                        label={({ priority, percent }) => `${priority} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {tasksByPriority.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} tasks`, 'Count']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Due Date Analysis</CardTitle>
+                <CardDescription>Tasks by due date status</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dueDateAnalysis}
+                      layout="vertical"
+                      margin={{ top: 20, right: 30, left: 70, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis 
+                        dataKey="status" 
+                        type="category"
+                        width={100}
+                      />
+                      <Tooltip formatter={(value) => [`${value} tasks`, 'Count']} />
+                      <Bar 
+                        dataKey="count" 
+                        name="Number of Tasks"
+                      >
+                        {dueDateAnalysis.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Task Categories</CardTitle>
+                <CardDescription>Distribution by category</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={taskCategories}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="count"
+                        label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {taskCategories.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} tasks`, 'Count']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Task Completion by Status</CardTitle>
+                <CardDescription>Completed vs In-Progress</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={tasksByStatus}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="status" />
+                      <YAxis 
+                        label={{ value: 'Number of Tasks', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip formatter={(value) => [`${value} tasks`, 'Count']} />
+                      <Bar 
+                        dataKey="count" 
+                        name="Tasks"
+                      >
+                        {tasksByStatus.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Bar>
