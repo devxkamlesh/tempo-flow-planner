@@ -1,13 +1,28 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { CalendarProvider } from "@/context/CalendarContext";
+import Layout from "@/components/Layout";
+import Dashboard from "./Dashboard";
+import { Route, Routes } from "react-router-dom";
+import Calendar from "./Calendar";
+import Tasks from "./Tasks";
+import Focus from "./Focus";
+import Settings from "./Settings";
+import Profile from "./Profile";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <CalendarProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/focus" element={<Focus />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </Layout>
+    </CalendarProvider>
   );
 };
 
