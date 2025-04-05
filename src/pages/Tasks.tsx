@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -33,6 +34,15 @@ import { cn } from '@/lib/utils';
 import { useCalendar } from '@/context/CalendarContext';
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from 'date-fns';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface Task {
   id: string;
@@ -50,6 +60,8 @@ const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskText, setNewTaskText] = useState('');
   const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
   
   useEffect(() => {
     const savedTasks = localStorage.getItem('tasks');
@@ -104,7 +116,7 @@ const Tasks: React.FC = () => {
     }
   };
 
-  const mapPriorityToEventType = (priority: 'high' | 'medium' | 'low'): string => {
+  const mapPriorityToEventType = (priority: 'high' | 'medium' | 'low'): "work" | "personal" | "focus" | "other" => {
     switch (priority) {
       case 'high': return 'work';
       case 'medium': return 'focus';
@@ -223,6 +235,48 @@ const Tasks: React.FC = () => {
     toast({
       title: "Added to Calendar",
       description: "Task has been added to your calendar."
+    });
+  };
+
+  const handleEditTask = (task: Task) => {
+    setCurrentTask(task);
+    setIsEditingTask(true);
+  };
+
+  const handleUpdateTask = (updatedTask: Task) => {
+    setTasks(tasks.map(task => 
+      task.id === updatedTask.id ? updatedTask : task
+    ));
+    
+    // Update calendar event if this task is linked to one
+    if (updatedTask.eventId) {
+      const associatedEvent = events.find(event => event.id === updatedTask.eventId);
+      if (associatedEvent) {
+        let dueDate = new Date();
+        if (updatedTask.dueDate) {
+          dueDate = new Date(updatedTask.dueDate);
+        }
+        
+        const endTime = new Date(dueDate);
+        endTime.setHours(endTime.getHours() + 1);
+        
+        editEvent({
+          ...associatedEvent,
+          title: updatedTask.title,
+          type: mapPriorityToEventType(updatedTask.priority),
+          description: updatedTask.notes,
+          start: dueDate,
+          end: endTime
+        });
+      }
+    }
+    
+    setIsEditingTask(false);
+    setCurrentTask(null);
+    
+    toast({
+      title: "Task Updated",
+      description: "Task has been updated successfully."
     });
   };
 
@@ -420,6 +474,7 @@ const Tasks: React.FC = () => {
           variant="ghost" 
           size="icon" 
           className="h-8 w-8 text-gray-500 hover:text-amber-500"
+          onClick={() => handleEditTask(task)}
           title="Edit task"
         >
           <Edit className="h-4 w-4" />
@@ -559,6 +614,97 @@ const Tasks: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Task Edit Dialog */}
+      <Dialog open={isEditingTask} onOpenChange={(open) => !open && setIsEditingTask(false)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          
+          {currentTask && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (currentTask) {
+                handleUpdateTask(currentTask);
+              }
+            }} 
+            className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="task-title">Task Title</Label>
+                <Input
+                  id="task-title"
+                  value={currentTask.title}
+                  onChange={(e) => setCurrentTask({...currentTask, title: e.target.value})}
+                  placeholder="Task title"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="task-priority">Priority</Label>
+                <div className="flex gap-2">
+                  <Button 
+                    type="button"
+                    variant={currentTask.priority === 'high' ? 'default' : 'outline'} 
+                    className={currentTask.priority === 'high' ? 'bg-red-500 hover:bg-red-600' : ''}
+                    onClick={() => setCurrentTask({...currentTask, priority: 'high'})}
+                  >
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    High
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant={currentTask.priority === 'medium' ? 'default' : 'outline'} 
+                    className={currentTask.priority === 'medium' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                    onClick={() => setCurrentTask({...currentTask, priority: 'medium'})}
+                  >
+                    <Clock3 className="h-4 w-4 mr-1" />
+                    Medium
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant={currentTask.priority === 'low' ? 'default' : 'outline'} 
+                    className={currentTask.priority === 'low' ? 'bg-blue-500 hover:bg-blue-600' : ''}
+                    onClick={() => setCurrentTask({...currentTask, priority: 'low'})}
+                  >
+                    <Star className="h-4 w-4 mr-1" />
+                    Low
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="task-date">Due Date</Label>
+                <Input
+                  id="task-date"
+                  type="date"
+                  value={currentTask.dueDate || ''}
+                  onChange={(e) => setCurrentTask({...currentTask, dueDate: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="task-notes">Notes</Label>
+                <Textarea
+                  id="task-notes"
+                  value={currentTask.notes || ''}
+                  onChange={(e) => setCurrentTask({...currentTask, notes: e.target.value})}
+                  placeholder="Add notes..."
+                />
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditingTask(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

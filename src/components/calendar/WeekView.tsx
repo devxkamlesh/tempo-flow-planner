@@ -4,8 +4,13 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay, isToday } from 'dat
 import { useCalendar } from '@/context/CalendarContext';
 import { cn } from '@/lib/utils';
 import EventItem from './EventItem';
+import type { CalendarEvent } from '@/services/calendarService';
 
-const WeekView: React.FC = () => {
+interface WeekViewProps {
+  onEditEvent?: (event: CalendarEvent) => void;
+}
+
+const WeekView: React.FC<WeekViewProps> = ({ onEditEvent }) => {
   const { events, selectedDate, setSelectedDate } = useCalendar();
   
   const startDate = startOfWeek(selectedDate);
@@ -29,7 +34,7 @@ const WeekView: React.FC = () => {
           <div 
             key={index} 
             className={cn(
-              "py-2 text-center cursor-pointer transition-colors hover:bg-gray-50",
+              "py-3 text-center cursor-pointer transition-colors hover:bg-gray-50",
               isToday(day) && "bg-calendar-subtle",
               isSameDay(day, selectedDate) && "font-semibold text-calendar"
             )}
@@ -37,7 +42,7 @@ const WeekView: React.FC = () => {
           >
             <div className="text-sm text-gray-500">{format(day, 'EEE')}</div>
             <div className={cn(
-              "w-8 h-8 mx-auto flex items-center justify-center rounded-full",
+              "w-9 h-9 mx-auto flex items-center justify-center rounded-full",
               isToday(day) && "bg-calendar text-white"
             )}>
               {format(day, 'd')}
@@ -60,7 +65,13 @@ const WeekView: React.FC = () => {
             >
               <div className="space-y-1">
                 {dayEvents.map(event => (
-                  <EventItem key={event.id} event={event} />
+                  <div 
+                    key={event.id} 
+                    onClick={() => onEditEvent && onEditEvent(event)}
+                    className="cursor-pointer transition-transform hover:translate-y-[-2px]"
+                  >
+                    <EventItem event={event} />
+                  </div>
                 ))}
               </div>
             </div>
