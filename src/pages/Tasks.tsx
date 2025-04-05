@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,7 +25,9 @@ import {
   Clock3,
   ListTodo,
   FileText,
-  Tag
+  Tag,
+  CalendarDays,
+  ListChecks
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -86,6 +88,9 @@ const Tasks: React.FC = () => {
     if (filter === 'completed') return task.completed;
     return !task.completed;
   });
+
+  const simpleTasks = filteredTasks.filter(task => !task.dueDate);
+  const complexTasks = filteredTasks.filter(task => task.dueDate);
 
   const handleAddTask = () => {
     if (newTaskText.trim() === '') return;
@@ -219,6 +224,117 @@ const Tasks: React.FC = () => {
     );
   };
 
+  const renderTaskItem = (task: Task) => (
+    <div 
+      key={task.id} 
+      className={cn(
+        "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all",
+        task.completed 
+          ? "bg-gray-50 border-gray-100" 
+          : task.priority === 'high'
+            ? "bg-white border-red-100 shadow-sm" 
+            : task.priority === 'medium'
+              ? "bg-white border-amber-100 shadow-sm"
+              : "bg-white border-blue-100 shadow-sm",
+        "hover:shadow-md"
+      )}
+    >
+      <div className="flex items-start sm:items-center gap-3 flex-1">
+        <div className="pt-1 sm:pt-0">
+          <Checkbox 
+            id={`task-${task.id}`}
+            checked={task.completed}
+            onCheckedChange={() => handleToggleComplete(task.id)}
+            className={cn(
+              task.completed 
+                ? "border-green-500 text-green-500" 
+                : task.priority === 'high'
+                  ? "border-red-500 text-red-500"
+                  : task.priority === 'medium'
+                    ? "border-amber-500 text-amber-500"
+                    : "border-blue-500 text-blue-500"
+            )}
+          />
+        </div>
+        <div className="flex-1 space-y-1">
+          <div className="flex items-start flex-wrap gap-2">
+            <label 
+              htmlFor={`task-${task.id}`}
+              className={cn(
+                "text-sm font-medium",
+                task.completed ? "line-through text-gray-500" : "text-gray-900"
+              )}
+            >
+              {task.title}
+            </label>
+            
+            {!task.completed && task.dueDate && renderDueDateBadge(task.dueDate)}
+            {!task.completed && getPriorityBadge(task.priority)}
+          </div>
+          
+          {task.notes && (
+            <div className="flex items-center text-xs text-gray-500">
+              <FileText className="h-3 w-3 mr-1" />
+              {task.notes}
+            </div>
+          )}
+          
+          {task.dueDate && (
+            <div className="flex items-center text-xs text-gray-500">
+              <CalendarIcon className="h-3 w-3 mr-1" />
+              Due: {new Date(task.dueDate).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-1 mt-2 sm:mt-0">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-gray-500 hover:text-calendar"
+          onClick={() => handleTogglePriority(task.id)}
+          title={`Priority: ${task.priority}`}
+        >
+          {getPriorityIcon(task.priority)}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-gray-500 hover:text-amber-500"
+          title="Edit task"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-gray-500 hover:text-red-500"
+          onClick={() => handleDeleteTask(task.id)}
+          title="Delete task"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderNoTasksMessage = (type: string) => (
+    <div className="py-10 text-center bg-gray-50 rounded-xl border border-gray-100">
+      <CheckSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+      <p className="text-gray-700 font-medium">No {type} tasks found</p>
+      <p className="text-sm text-gray-500 mt-1">
+        {filter === 'all' 
+          ? `Add some ${type} tasks to get started!` 
+          : filter === 'completed' 
+            ? `You haven't completed any ${type} tasks yet.` 
+            : `All ${type} tasks are completed!`}
+      </p>
+    </div>
+  );
+
   return (
     <div className="tasks-page">
       <h1 className="text-2xl font-bold mb-6">Tasks</h1>
@@ -228,43 +344,8 @@ const Tasks: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center">
               <ListTodo className="h-5 w-5 mr-2 text-calendar" />
-              Task List
+              Add New Task
             </CardTitle>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setFilter('all')}
-                className={cn(
-                  "rounded-full px-4",
-                  filter === 'all' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
-                )}
-              >
-                All
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setFilter('active')}
-                className={cn(
-                  "rounded-full px-4",
-                  filter === 'active' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
-                )}
-              >
-                Active
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setFilter('completed')}
-                className={cn(
-                  "rounded-full px-4",
-                  filter === 'completed' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
-                )}
-              >
-                Completed
-              </Button>
-            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -280,118 +361,84 @@ const Tasks: React.FC = () => {
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
-          
-          <div className="space-y-3">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map(task => (
-                <div 
-                  key={task.id} 
-                  className={cn(
-                    "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all",
-                    task.completed 
-                      ? "bg-gray-50 border-gray-100" 
-                      : task.priority === 'high'
-                        ? "bg-white border-red-100 shadow-sm" 
-                        : task.priority === 'medium'
-                          ? "bg-white border-amber-100 shadow-sm"
-                          : "bg-white border-blue-100 shadow-sm",
-                    "hover:shadow-md"
-                  )}
-                >
-                  <div className="flex items-start sm:items-center gap-3 flex-1">
-                    <div className="pt-1 sm:pt-0">
-                      <Checkbox 
-                        id={`task-${task.id}`}
-                        checked={task.completed}
-                        onCheckedChange={() => handleToggleComplete(task.id)}
-                        className={cn(
-                          task.completed 
-                            ? "border-green-500 text-green-500" 
-                            : task.priority === 'high'
-                              ? "border-red-500 text-red-500"
-                              : task.priority === 'medium'
-                                ? "border-amber-500 text-amber-500"
-                                : "border-blue-500 text-blue-500"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-start flex-wrap gap-2">
-                        <label 
-                          htmlFor={`task-${task.id}`}
-                          className={cn(
-                            "text-sm font-medium",
-                            task.completed ? "line-through text-gray-500" : "text-gray-900"
-                          )}
-                        >
-                          {task.title}
-                        </label>
-                        
-                        {!task.completed && task.dueDate && renderDueDateBadge(task.dueDate)}
-                        {!task.completed && getPriorityBadge(task.priority)}
-                      </div>
-                      
-                      {task.notes && (
-                        <div className="flex items-center text-xs text-gray-500">
-                          <FileText className="h-3 w-3 mr-1" />
-                          {task.notes}
-                        </div>
-                      )}
-                      
-                      {task.dueDate && (
-                        <div className="flex items-center text-xs text-gray-500">
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          Due: {new Date(task.dueDate).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 mt-2 sm:mt-0">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-gray-500 hover:text-calendar"
-                      onClick={() => handleTogglePriority(task.id)}
-                      title={`Priority: ${task.priority}`}
-                    >
-                      {getPriorityIcon(task.priority)}
-                    </Button>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-gray-500 hover:text-amber-500"
-                      title="Edit task"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-gray-500 hover:text-red-500"
-                      onClick={() => handleDeleteTask(task.id)}
-                      title="Delete task"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center bg-gray-50 rounded-xl border border-gray-100">
-                <CheckSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-700 font-medium">No tasks found</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {filter === 'all' 
-                    ? 'Add some tasks to get started!' 
-                    : filter === 'completed' 
-                      ? 'You haven\'t completed any tasks yet.' 
-                      : 'All tasks are completed!'}
-                </p>
-              </div>
+        </CardContent>
+      </Card>
+      
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Filter Tasks</h2>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setFilter('all')}
+            className={cn(
+              "rounded-full px-4",
+              filter === 'all' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
             )}
+          >
+            All
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setFilter('active')}
+            className={cn(
+              "rounded-full px-4",
+              filter === 'active' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
+            )}
+          >
+            Active
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setFilter('completed')}
+            className={cn(
+              "rounded-full px-4",
+              filter === 'completed' ? 'bg-calendar text-white hover:bg-calendar-focus' : ''
+            )}
+          >
+            Completed
+          </Button>
+        </div>
+      </div>
+      
+      <Card className="mb-6 shadow-sm border-gray-100">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center text-lg">
+            <ListChecks className="h-5 w-5 mr-2 text-blue-500" />
+            Simple Tasks
+            <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700">
+              {simpleTasks.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {simpleTasks.length > 0 ? 
+              simpleTasks.map(renderTaskItem) : 
+              renderNoTasksMessage('simple')
+            }
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mb-6 shadow-sm border-gray-100">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center text-lg">
+            <CalendarDays className="h-5 w-5 mr-2 text-amber-500" />
+            Scheduled Tasks
+            <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700">
+              {complexTasks.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {complexTasks.length > 0 ? 
+              complexTasks.map(renderTaskItem) : 
+              renderNoTasksMessage('scheduled')
+            }
           </div>
         </CardContent>
       </Card>
