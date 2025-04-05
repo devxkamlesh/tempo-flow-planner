@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -30,6 +30,9 @@ import {
   ListChecks
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCalendar } from '@/context/CalendarContext';
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from 'date-fns';
 
 interface Task {
   id: string;
@@ -38,51 +41,78 @@ interface Task {
   priority: 'high' | 'medium' | 'low';
   dueDate?: string;
   notes?: string;
+  eventId?: string;
 }
 
-const initialTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Complete quarterly report',
-    completed: false,
-    priority: 'high',
-    dueDate: '2025-04-10',
-    notes: 'Include sales forecast and marketing analysis'
-  },
-  {
-    id: '2',
-    title: 'Review team project plan',
-    completed: false,
-    priority: 'medium',
-    dueDate: '2025-04-08'
-  },
-  {
-    id: '3',
-    title: 'Prepare for client meeting',
-    completed: false,
-    priority: 'low',
-    dueDate: '2025-04-05'
-  },
-  {
-    id: '4',
-    title: 'Update portfolio website',
-    completed: true,
-    priority: 'medium'
-  },
-  {
-    id: '5',
-    title: 'Send follow-up emails',
-    completed: false,
-    priority: 'medium',
-    dueDate: '2025-04-07'
-  }
-];
-
 const Tasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { events, addEvent, editEvent, removeEvent } = useCalendar();
+  const { toast } = useToast();
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskText, setNewTaskText] = useState('');
   const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
   
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('tasks');
+    if (savedTasks) {
+      try {
+        setTasks(JSON.parse(savedTasks));
+      } catch (e) {
+        console.error("Error parsing tasks from localStorage:", e);
+        setTasks([]);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    const taskEventIds = tasks.filter(task => task.eventId).map(task => task.eventId);
+    
+    const newEvents = events.filter(event => 
+      !taskEventIds.includes(event.id)
+    );
+    
+    if (newEvents.length > 0) {
+      const newTasks = newEvents.map(event => {
+        return {
+          id: `task-${event.id}`,
+          title: event.title,
+          completed: false,
+          priority: mapEventTypeToPriority(event.type),
+          dueDate: format(event.start, 'yyyy-MM-dd'),
+          notes: event.description || undefined,
+          eventId: event.id
+        };
+      });
+      
+      setTasks(prev => [...prev, ...newTasks]);
+      toast({
+        title: "Calendar Sync",
+        description: `${newEvents.length} events added to tasks.`,
+      });
+    }
+  }, [events]);
+
+  const mapEventTypeToPriority = (type: string): 'high' | 'medium' | 'low' => {
+    switch (type) {
+      case 'work': return 'high';
+      case 'focus': return 'medium';
+      case 'personal': return 'low';
+      default: return 'medium';
+    }
+  };
+
+  const mapPriorityToEventType = (priority: 'high' | 'medium' | 'low'): string => {
+    switch (priority) {
+      case 'high': return 'work';
+      case 'medium': return 'focus';
+      case 'low': return 'personal';
+      default: return 'other';
+    }
+  };
+
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
     if (filter === 'completed') return task.completed;
@@ -96,7 +126,7 @@ const Tasks: React.FC = () => {
     if (newTaskText.trim() === '') return;
     
     const newTask: Task = {
-      id: Date.now().toString(),
+      id: `task-${Date.now().toString()}`,
       title: newTaskText,
       completed: false,
       priority: 'medium'
@@ -118,14 +148,82 @@ const Tasks: React.FC = () => {
         const priorities: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
         const currentIndex = priorities.indexOf(task.priority);
         const nextIndex = (currentIndex + 1) % priorities.length;
-        return { ...task, priority: priorities[nextIndex] };
+        const newPriority = priorities[nextIndex];
+        
+        if (task.eventId) {
+          const associatedEvent = events.find(event => event.id === task.eventId);
+          if (associatedEvent) {
+            editEvent({
+              ...associatedEvent,
+              type: mapPriorityToEventType(newPriority)
+            });
+          }
+        }
+        
+        return { ...task, priority: newPriority };
       }
       return task;
     }));
   };
 
   const handleDeleteTask = (taskId: string) => {
+    const taskToDelete = tasks.find(task => task.id === taskId);
+    
+    if (taskToDelete?.eventId) {
+      removeEvent(taskToDelete.eventId);
+    }
+    
     setTasks(tasks.filter(task => task.id !== taskId));
+    
+    toast({
+      title: "Task Deleted",
+      description: "The task has been removed successfully."
+    });
+  };
+
+  const handleAddToCalendar = (task: Task) => {
+    if (!task.dueDate) {
+      toast({
+        title: "Cannot Add to Calendar",
+        description: "This task doesn't have a due date.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (task.eventId) {
+      toast({
+        title: "Already in Calendar",
+        description: "This task is already linked to a calendar event."
+      });
+      return;
+    }
+    
+    const dueDate = new Date(task.dueDate);
+    const endTime = new Date(dueDate);
+    endTime.setHours(endTime.getHours() + 1);
+    
+    const newEvent = {
+      title: task.title,
+      start: dueDate,
+      end: endTime,
+      type: mapPriorityToEventType(task.priority),
+      description: task.notes,
+      location: ""
+    };
+    
+    addEvent(newEvent);
+    
+    const createdEvent = events[events.length - 1];
+    
+    setTasks(tasks.map(t => 
+      t.id === task.id ? { ...t, eventId: createdEvent.id } : t
+    ));
+    
+    toast({
+      title: "Added to Calendar",
+      description: "Task has been added to your calendar."
+    });
   };
 
   const getPriorityIcon = (priority: 'high' | 'medium' | 'low') => {
@@ -268,6 +366,13 @@ const Tasks: React.FC = () => {
               {task.title}
             </label>
             
+            {task.eventId && (
+              <Badge variant="outline" className="bg-calendar-50 text-calendar-700 border-calendar-200">
+                <CalendarIcon className="h-3 w-3 mr-1" />
+                Calendar
+              </Badge>
+            )}
+            
             {!task.completed && task.dueDate && renderDueDateBadge(task.dueDate)}
             {!task.completed && getPriorityBadge(task.priority)}
           </div>
@@ -298,6 +403,18 @@ const Tasks: React.FC = () => {
         >
           {getPriorityIcon(task.priority)}
         </Button>
+        
+        {task.dueDate && !task.eventId && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-gray-500 hover:text-calendar"
+            onClick={() => handleAddToCalendar(task)}
+            title="Add to Calendar"
+          >
+            <CalendarIcon className="h-4 w-4" />
+          </Button>
+        )}
         
         <Button 
           variant="ghost" 

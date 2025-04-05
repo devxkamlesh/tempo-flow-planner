@@ -20,11 +20,36 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
 
+  // Load events from localStorage on component mount
   useEffect(() => {
-    // Initialize with mock data
-    const mockEvents = generateMockEvents(selectedDate);
-    setEvents(mockEvents);
+    const savedEvents = localStorage.getItem('calendarEvents');
+    if (savedEvents) {
+      try {
+        // Parse the stringified events and convert string dates back to Date objects
+        const parsedEvents = JSON.parse(savedEvents, (key, value) => {
+          if (key === 'start' || key === 'end') {
+            return new Date(value);
+          }
+          return value;
+        });
+        setEvents(parsedEvents);
+      } catch (e) {
+        console.error("Error parsing events from localStorage:", e);
+        // Initialize with mock data if there's an error
+        const mockEvents = generateMockEvents(selectedDate);
+        setEvents(mockEvents);
+      }
+    } else {
+      // Initialize with mock data if no saved events
+      const mockEvents = generateMockEvents(selectedDate);
+      setEvents(mockEvents);
+    }
   }, []);
+
+  // Save events to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+  }, [events]);
 
   const addEvent = (event: Omit<CalendarEvent, "id">) => {
     setEvents(prevEvents => createEvent(prevEvents, event));
